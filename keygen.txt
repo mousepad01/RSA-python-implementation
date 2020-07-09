@@ -1,0 +1,19 @@
+se genereaza numerele prime din intervalul [0, 25000]
+
+se genereaza pe rand, cele doua numere prime, astfel:
+se apeleaza functia primegen, care apeleaza functia bignumgen:
+	functia bignumgen alege arbitrar lungimea numerului de construit, intre 600 si 650 cifre
+	daca a mai fost generat un numar inainte care are lungime asemanatoare, se schimba lungimea
+	se construieste arbitrar numarul, cu conditia ca ultima cifra sa fie impara (deci numarul sa fie impar)
+	se returneaza rezultatul
+se testeaza divizibilitatea numarului candidat cu numerele prime pana la 20000
+se aplica testul rabin miller pentru primalitate:
+se verifica cu ajutorul teoremei lui fermat (a ^ (n - 1) % n = 1) si a faptului
+ca nu exista radacini diferite de -1 si 1 a.i. a ^ 2 % n = 1, cu n prim
+se descompune numarul candidat n - 1 in 2 ^ exp * dp
+daca gasesc un a arbitrar din intervalul [1, n - 1] astfel incat a ^ dp != 1
+si a ^ ((2 ^ r) * dp) != -1 pentru orice r intre 0 si exp - 1 inclusiv, 
+inseamna ca numarul este compus
+altfel, repet testul pentru mai multi a
+daca nu gasesc nici un a a.i. sa rezulte ca numarul este compus, numarul are o
+sansa foarte mare de a fi prim
