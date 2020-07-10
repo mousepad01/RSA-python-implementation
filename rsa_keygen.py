@@ -199,7 +199,7 @@ t = time.time()
 
 print('generating second prime...')
 q = primegen()
-while q == -1:
+while q == -1 or (p - 1) * (q - 1) % 65537 == 0: # a doua conditie trebuie verificata pentru a putea folosi euclid extins la decriptare in vederea obtinerii exponentului privat
     q = primegen()
 
 privk.write(str(q))
