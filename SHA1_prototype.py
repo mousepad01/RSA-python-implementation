@@ -1,3 +1,6 @@
+maxdim = 2 ** 32
+
+
 def left_rotate(x, k):  # rotatie considerand reprezentarea pe 32 biti
     return ((x << k) & (2 ** x.bit_length() - k)) + (((((2 ** 32 - 1) >> (32 - k)) << (32 - k)) & x) >> (32 - k))
 
@@ -46,7 +49,7 @@ while msg.bit_length() > 0:
         chunk >>= 32
 
     for i in range(16, 80):
-        w.append(left_rotate(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1))
+        w.append(left_rotate(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1) % maxdim)
 
     a = h0
     b = h1
@@ -83,7 +86,7 @@ while msg.bit_length() > 0:
 
             k = 0xCA62C1D6
 
-        new_val = left_rotate(a, 5) + f + e + k + w[i]
+        new_val = (left_rotate(a, 5) + f + e + k + w[i]) % maxdim
         e = d
         d = c
         c = left_rotate(b, 30)
@@ -96,12 +99,17 @@ while msg.bit_length() > 0:
     h3 += d
     h4 += e
 
+    h0 %= maxdim
+    h1 %= maxdim
+    h2 %= maxdim
+    h3 %= maxdim
+    h4 %= maxdim
+
     msg >>= 512
 
 hash_value = (h0 << 128) + (h1 << 96) + (h2 << 64) + (h3 << 32) + h4
 
 print(hex(hash_value))
-
 
 
 
