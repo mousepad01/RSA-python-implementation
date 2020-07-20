@@ -1,27 +1,27 @@
 maxdim = 2 ** 32
+mask32 = maxdim - 1
 
 
 def right_rotate(x, ct):  # rotatie pe 32 biti
-    return (x >> ct) + (((2 ** ct - 1) & x) << (32 - ct))
+    return (x >> ct) | (((2 ** ct - 1) & x) << (32 - ct))
 
 
 msg_file = open('msg_for_hash.txt')
 msg_string = msg_file.readline()
 
-msg = int(msg_string[:len(msg_string)])
+msg_b_list = bytearray(msg_string, 'ascii')
+msg = ''.join([format(x, '08b') for x in msg_b_list])
 
-msg_b_length = msg.bit_length()
+msg_b_length = len(msg)
 
-msg = (msg << 1) + 1  # adaug 1 la finalul repr bin a mesajului
+msg += '1'  # adaug 1 la finalul repr bin a mesajului
 
 # preprocesez mesajul pentru a avea lungimea congruenta cu 0 mod 512
 
-while msg.bit_length() % 512 != 448:
-    msg <<= 1
+while len(msg) % 512 != 448:
+    msg += '0'
 
-msg <<= 64
-
-msg += msg_b_length
+msg += str(format(msg_b_length, '064b'))
 
 # initializez valorile initiale ale hash ului si constantele
 
@@ -45,27 +45,24 @@ k = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x9
 
 # execut algoritmul
 
-chunk_mask = 2 ** 512 - 1
-w_mask = 2 ** 32 - 1
+while len(msg) > 0:
 
-while msg.bit_length() > 0:
-
-    chunk = msg & chunk_mask
+    chunk = msg[:512]
 
     w = []
 
-    while chunk.bit_length() > 0:
+    while len(chunk) > 0:
 
-        w.append(chunk & w_mask)
+        w.append(int(chunk[:32], 2))
 
-        chunk >>= 32
+        chunk = chunk[32:]
 
     for i in range(16, 64):
 
-        s0 = (right_rotate(w[i - 15], 7) ^ right_rotate(w[i - 15], 18) ^ (w[i - 15] >> 3)) % maxdim
-        s1 = (right_rotate(w[i - 2], 17) ^ right_rotate(w[i - 2], 19) ^ (w[i - 2] >> 10)) % maxdim
+        s0 = (right_rotate(w[i - 15], 7) ^ right_rotate(w[i - 15], 18) ^ (w[i - 15] >> 3)) & mask32
+        s1 = (right_rotate(w[i - 2], 17) ^ right_rotate(w[i - 2], 19) ^ (w[i - 2] >> 10)) & mask32
 
-        w.append((w[i - 16] + s0 + w[i - 7] + s1) % maxdim)
+        w.append((w[i - 16] + s0 + w[i - 7] + s1) & mask32)
 
     a = h0
     b = h1
@@ -79,20 +76,20 @@ while msg.bit_length() > 0:
     for i in range(64):
 
         s1 = right_rotate(e, 6) ^ right_rotate(e, 11) ^ right_rotate(e, 25)
-        ch = (e & f) ^ ((not e) & g)
+        ch = (e & f) ^ (~e & g)
         temp1 = h + s1 + ch + k[i] + w[i]
         s0 = right_rotate(a, 2) ^ right_rotate(a, 13) ^ right_rotate(a, 22)
         maj = (a & b) ^ (a & c) ^ (b & c)
         temp2 = s0 + maj
 
-        h = g % maxdim
-        g = f % maxdim
-        f = e % maxdim
-        e = (d + temp1) % maxdim
-        d = c % maxdim
-        c = b % maxdim
-        b = a % maxdim
-        a = (temp1 + temp2) % maxdim
+        h = g & mask32
+        g = f & mask32
+        f = e & mask32
+        e = (d + temp1) & mask32
+        d = c & mask32
+        c = b & mask32
+        b = a & mask32
+        a = (temp1 + temp2) & mask32
 
     h0 += a
     h1 += b
@@ -103,16 +100,16 @@ while msg.bit_length() > 0:
     h6 += g
     h7 += h
 
-    h0 %= maxdim
-    h1 %= maxdim
-    h2 %= maxdim
-    h3 %= maxdim
-    h4 %= maxdim
-    h5 %= maxdim
-    h6 %= maxdim
-    h7 %= maxdim
+    h0 &= mask32
+    h1 &= mask32
+    h2 &= mask32
+    h3 &= mask32
+    h4 &= mask32
+    h5 &= mask32
+    h6 &= mask32
+    h7 &= mask32
 
-    msg >>= 512
+    msg = msg[512:]
 
 hash_value = (h0 << 224) + (h1 << 192) + (h2 << 160) + (h3 << 128) + (h4 << 96) + (h5 << 64) + (h6 << 32) + h7
 
