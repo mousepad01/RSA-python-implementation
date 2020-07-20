@@ -1,61 +1,52 @@
 maxdim = 2 ** 32
+mask32 = maxdim - 1
 
 
-def left_rotate(x, k):  # rotatie considerand reprezentarea pe 32 biti
-    return ((x << k) & (2 ** x.bit_length() - k)) + (((((2 ** 32 - 1) >> (32 - k)) << (32 - k)) & x) >> (32 - k))
+def left_rotate(x, ct):  # rotatie pe 32 biti
+    return ((x << ct) & mask32) | (x >> 32 - ct)
 
 
 msg_file = open('msg_for_hash.txt')
 msg_string = msg_file.readline()
 
-msg = int(msg_string[:len(msg_string)])
+msg_b_list = bytearray(msg_string, 'ascii')
+msg = ''.join([format(x, '08b') for x in msg_b_list])
 
-msg_b_length = msg.bit_length()
+msg_b_length = len(msg)
 
-msg = (msg << 1) + 1   # adaug 1 la finalul repr bin a mesajului
+msg += '1'  # adaug 1 la finalul repr bin a mesajului
 
 # preprocesez mesajul pentru a avea lungimea congruenta cu 0 mod 512
 
-while msg.bit_length() % 512 != 448:
-    msg <<= 1
+while len(msg) % 512 != 448:
+    msg += '0'
 
-msg <<= 64
-
-msg += msg_b_length
+msg += str(format(msg_b_length, '064b'))
 
 # sparg in bucati de 512 biti si execut algoritmul
 
-h0 = 0x67452301
-h1 = 0xEFCDAB89
-h2 = 0x98BADCFE
-h3 = 0x10325476
-h4 = 0xC3D2E1F0
+h = [0x67452301, 0xEFCDAB89, 0x98BADCFE, 0x10325476, 0xC3D2E1F0]
 
-chunk_mask = 2 ** 512 - 1
-w_mask = 2 ** 32 - 1
+while len(msg) > 0:
 
-while msg.bit_length() > 0:
-
-    chunk = msg & chunk_mask
+    chunk = msg[:512]
 
     w = []
 
-    i = 0
+    while len(chunk) > 0:
 
-    while chunk.bit_length() > 0:
+        w.append(int(chunk[:32], 2))
 
-        w.append(chunk & w_mask)
-
-        chunk >>= 32
+        chunk = chunk[32:]
 
     for i in range(16, 80):
-        w.append(left_rotate(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1) % maxdim)
+        w.append(left_rotate(w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16], 1) & mask32)
 
-    a = h0
-    b = h1
-    c = h2
-    d = h3
-    e = h4
+    a = h[0]
+    b = h[1]
+    c = h[2]
+    d = h[3]
+    e = h[4]
 
     f = 0
     k = 0
@@ -64,7 +55,7 @@ while msg.bit_length() > 0:
 
         if 0 <= i < 20:
 
-            f = (b & c) | ((not b) & c)
+            f = (b & c) ^ (~b & d)
 
             k = 0x5A827999
 
@@ -76,7 +67,7 @@ while msg.bit_length() > 0:
 
         elif 40 <= i < 60:
 
-            f = (b & c) | (b & d) | (c & d)
+            f = (b & c) ^ (b & d) ^ (c & d)
 
             k = 0x8F1BBCDC
 
@@ -86,28 +77,28 @@ while msg.bit_length() > 0:
 
             k = 0xCA62C1D6
 
-        new_val = (left_rotate(a, 5) + f + e + k + w[i]) % maxdim
+        temp1 = (left_rotate(a, 5) + f + e + k + w[i]) & mask32
         e = d
         d = c
         c = left_rotate(b, 30)
         b = a
-        a = new_val
+        a = temp1
 
-    h0 += a
-    h1 += b
-    h2 += c
-    h3 += d
-    h4 += e
+    h[0] += a
+    h[1] += b
+    h[2] += c
+    h[3] += d
+    h[4] += e
 
-    h0 %= maxdim
-    h1 %= maxdim
-    h2 %= maxdim
-    h3 %= maxdim
-    h4 %= maxdim
+    h[0] &= mask32
+    h[1] &= mask32
+    h[2] &= mask32
+    h[3] &= mask32
+    h[4] &= mask32
 
-    msg >>= 512
+    msg = msg[512:]
 
-hash_value = (h0 << 128) + (h1 << 96) + (h2 << 64) + (h3 << 32) + h4
+hash_value = (h[0] << 128) | (h[1] << 96) | (h[2] << 64) | (h[3] << 32) | h[4]
 
 print(hex(hash_value))
 
