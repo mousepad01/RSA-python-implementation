@@ -230,7 +230,7 @@ def mgf1_sha1(msg, lt):
     m_factor = lt // h_len
 
     for cnt in range(m_factor + 1):
-        to_gen += str(bin(sha1(msg + i2osp(cnt, 4))))[2:]
+        to_gen += format(sha1(msg + i2osp(cnt, 4)), '0160b')
 
     return int(to_gen[:lt * 8], 2)
 
@@ -243,7 +243,8 @@ def mgf1_sha256(msg, lt):
     m_factor = lt // h_len
 
     for cnt in range(m_factor + 1):
-        to_gen += str(bin(sha256(msg + i2osp(cnt, 4))))[2:]
+        to_gen += format(sha256(msg + i2osp(cnt, 4)), '0256b')
 
     return int(to_gen[:lt * 8], 2)
+
 
