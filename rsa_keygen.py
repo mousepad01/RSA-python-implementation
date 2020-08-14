@@ -34,6 +34,25 @@ def logpow(exp, base, mod):
         return (base * logpow(exp // 2, base ** 2, mod) % mod) % mod
 
 
+def egcd(a, b):  # algoritm copiat euclid extins
+    x = 0
+    y = 1
+    u = 1
+    v = 0
+    while a != 0:
+        q = b // a
+        r = b % a
+        m = x - u * q
+        n = y - v * q
+        b = a
+        a = r
+        x = u
+        y = v
+        u = m
+        v = n
+    return x
+
+
 def ciur():
     global erath
     global primes
@@ -188,7 +207,7 @@ while p == -1:
 privk = open("private_keys.txt", 'w')
 privk.write(str(p))
 privk.write('\n')
-print('first prime generated --> line 1 in private_keys.txt (', time.time() - t, ' seconds )')
+print('first prime generated --> line 0 in private_keys.txt (', time.time() - t, ' seconds )')
 print('\n')
 
 testlen = True
@@ -203,18 +222,27 @@ while q == -1 or (p - 1) * (q - 1) % 65537 == 0: # a doua conditie trebuie verif
     q = primegen()
 
 privk.write(str(q))
-print('second prime generated --> line 2 in private_keys.txt (', time.time() - t, ' seconds )')
+privk.write('\n')
+print('second prime generated --> line 1 in private_keys.txt (', time.time() - t, ' seconds )')
 print('\n')
 
 n = p * q
 e = 65537
-# e = int(input())
+
+d = egcd(e, (p - 1) * (q - 1))
+
+while d < 0:
+    d += (p - 1) * (q - 1)
+
+privk.write(str(d))
+print('decryption exponent generated --> line 2 in private_keys.txt (', time.time() - t, ' seconds )')
+print('\n')
 
 pubk = open("public_key.txt", 'w')
 pubk.write(str(n))
 pubk.write('\n')
 pubk.write(str(e))
-print('public key n generated --> line 1 in public_key.txt')
+print('public key n generated --> line 0 in public_key.txt')
 print('public key e uploaded: e =', e)
 
 input('done. Press any KEY to continue')

@@ -3,6 +3,7 @@ import sys
 import random
 
 from oaep_prototype import oaep_encode
+from MGF1_prototype import sha256
 
 sys.setrecursionlimit(100000)
 
@@ -44,6 +45,13 @@ message = msgfile.read()
 lm = len(message)
 
 pubk = open("public_key.txt")
+privk = open("private_keys.txt")
+
+auxp = privk.readline()
+auxq = privk.readline()
+
+auxd = privk.readline()
+d = int(auxd[:len(auxd)])
 
 t = time.time()
 
@@ -52,6 +60,14 @@ n = int(auxn[:len(auxn) - 1])
 
 auxe = pubk.readline()
 e = int(auxe[:len(auxe)])
+
+# digital signature generator
+
+message_hash = sha256(message)
+
+signature = logpow(d, message_hash, n)
+
+# ---------------------------------
 
 converted_message = ''
 
@@ -72,8 +88,6 @@ lmessage = len(converted_message)
 nlenght = lenght(n)
 
 lenpackage = random.randint(20, 30)
-
-#b_lenpackage = random.randint(70, 100)  # lungimea reprezentarii pe biti a unei bucati de mesaj
 
 if lenpackage >= lmessage:
 
@@ -106,6 +120,11 @@ for i in range(npackages + 1):
     crypted_file.write(str(crypted_packages[i]))
     crypted_file.write('\n')
 
-print('message encrypted ---> found in cfile.txt starting with line 2 (', time.time() - t, ' seconds )')
+print('message encrypted ---> found in cfile.txt starting with line 1 (', time.time() - t, ' seconds )')
+
+crypted_file.write(str(signature))
+
+print('message signed ---> signature found in last line of cfile.txt')
+
 input('done. Press any KEY to continue')
 
