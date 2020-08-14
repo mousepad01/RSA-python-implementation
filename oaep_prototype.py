@@ -6,15 +6,6 @@ import secrets
 
 def oaep_encode(msg_string, final_len = 512, hash_len = 32):
 
-    # aplicare padding
-
-    '''msg_file = open("oaep_input.txt")
-
-    msg_string = msg_file.readline()
-
-    final_len = 512  # lungimea in biti a stringului final
-    hash_len = 32  # lungimea in biti a hash ului dat de sha256'''
-
     # convertesc mesajul intr un string ce imita reprezentarea binara a string ului
 
     msg_b_list = bytearray(msg_string, 'ascii')
