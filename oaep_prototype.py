@@ -30,7 +30,7 @@ def oaep_encode(msg_string, final_len = 512, hash_len = 32):
 
     # generare seed random
 
-    seed = secrets.randbits(hash_len)
+    seed = secrets.randbits(hash_len * 8)
 
     # execut algoritmul
 
